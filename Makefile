@@ -1,4 +1,5 @@
 PREFIX ?= $(HOME)/.local
+INSTALL_PREFIX ?= $(PREFIX)
 CACHE_DIR ?= .cache
 ROOTFS ?= $(CACHE_DIR)/rootfs
 OGUI_VERSION ?= $(shell grep 'core = ' core/global/version.tres | cut -d '"' -f2)
@@ -54,11 +55,11 @@ help: ## Display this help.
 
 .PHONY: install 
 install: rootfs ## Install OpenGamepadUI (default: ~/.local)
-	cd $(ROOTFS) && make install PREFIX=$(PREFIX)
+	cd $(ROOTFS) && make install PREFIX=$(PREFIX) INSTALL_PREFIX=$(INSTALL_PREFIX)
 
 .PHONY: uninstall
 uninstall: ## Uninstall OpenGamepadUI
-	cd $(ROOTFS) && make uninstall PREFIX=$(PREFIX)
+	cd $(ROOTFS) && make uninstall PREFIX=$(PREFIX) INSTALL_PREFIX=$(INSTALL_PREFIX)
 
 ##@ Systemd Extension
 
