@@ -27,6 +27,10 @@ var _profiles_available: PackedStringArray
 
 var _power_station_running := false
 var _profile_loading := false
+## In overlay mode the session we're running on top of (e.g. Steam) manages TDP,
+## the GPU performance level, and GPU clock frequency itself, so we don't show
+## controls for them.
+var _overlay_mode := Platform.is_overlay_mode()
 var _current_profile: PerformanceProfile
 var logger := Log.get_logger("Performance", Log.LEVEL.INFO)
 
@@ -121,6 +125,10 @@ func _ready() -> void:
 
 	# Toggle visibility when the GPU freq manual toggle is on
 	var on_manual_freq := func() -> void:
+		# GPU clock frequency is managed by the underlying session in overlay mode
+		if _overlay_mode:
+			return
+
 		# Immediately apply manual GPU frequency so we can read the min/max
 		# values for the sliders
 		var card := _get_integrated_card()
@@ -269,22 +277,25 @@ func _setup_interface() -> void:
 
 	gpu_label.visible = is_advanced
 
-	tdp_slider.visible = is_advanced
+	# Avoid setting TDP/Freq if managed by the underlying session
+	var gpu_power_manageable := not _overlay_mode
+
+	tdp_slider.visible = is_advanced and gpu_power_manageable
 	tdp_slider.min_value = round(_hardware_manager.gpu.tdp_min)
 	tdp_slider.max_value = round(_hardware_manager.gpu.tdp_max)
 
-	tdp_boost_slider.visible = is_advanced
+	tdp_boost_slider.visible = is_advanced and gpu_power_manageable
 	tdp_boost_slider.max_value = round(_hardware_manager.gpu.max_boost)
 
-	gpu_freq_enable.visible = is_advanced
+	gpu_freq_enable.visible = is_advanced and gpu_power_manageable
 
-	power_profile_dropdown.visible = not is_advanced
+	power_profile_dropdown.visible = not is_advanced and gpu_power_manageable
 
-	gpu_freq_min_slider.visible = card.manual_clock and is_advanced
+	gpu_freq_min_slider.visible = card.manual_clock and is_advanced and gpu_power_manageable
 	gpu_freq_min_slider.min_value = round(card.clock_limit_mhz_min)
 	gpu_freq_min_slider.max_value = round(card.clock_limit_mhz_max)
 
-	gpu_freq_max_slider.visible = card.manual_clock and is_advanced
+	gpu_freq_max_slider.visible = card.manual_clock and is_advanced and gpu_power_manageable
 	gpu_freq_max_slider.min_value = round(card.clock_limit_mhz_min)
 	gpu_freq_max_slider.max_value = round(card.clock_limit_mhz_max)
 

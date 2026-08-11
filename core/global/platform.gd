@@ -8,6 +8,9 @@ class_name Platform
 
 signal platform_loaded
 
+## Command-line arguments that launch OpenGamepadUI in overlay mode
+const OVERLAY_MODE_ARGS := ["--overlay-mode", "--only-qam", "--qam-only"]
+
 ## Platforms we support
 enum PLATFORM {
 	# Hardware platforms
@@ -58,6 +61,14 @@ var os: OSPlatform
 var platform: PlatformProvider
 var logger := Log.get_logger("Platform", Log.LEVEL.INFO)
 var loaded: bool
+
+
+## Returns whether or not OpenGamepadUI was launched in overlay mode.
+static func is_overlay_mode(args := OS.get_cmdline_args()) -> bool:
+	for arg in args:
+		if arg in OVERLAY_MODE_ARGS:
+			return true
+	return false
 
 
 func _init() -> void:
