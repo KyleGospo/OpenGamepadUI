@@ -12,12 +12,10 @@ func _ready() -> void:
 		return
 
 	# Launch CardUI in overlay mode
-	if "--qam-only" in args or "--only-qam" in args:
-		print("[WARN] Deprecation Warning: --only-qam and --qam-only launch arguments are deprecated\
-		and will be removed in a future update. Use --overlay-mode instead.")
-		_change_to_scene("res://core/ui/card_ui_overlay_mode/card_ui_overlay_mode.tscn")
-		return
-	elif "--overlay-mode" in args:
+	if Platform.is_overlay_mode(args):
+		if "--qam-only" in args or "--only-qam" in args:
+			print("[WARN] Deprecation Warning: --only-qam and --qam-only launch arguments are deprecated\
+			and will be removed in a future update. Use --overlay-mode instead.")
 		_change_to_scene("res://core/ui/card_ui_overlay_mode/card_ui_overlay_mode.tscn")
 		return
 

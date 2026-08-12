@@ -28,6 +28,8 @@ var _power_station := load("res://core/systems/performance/power_station.tres") 
 var _launch_manager := load("res://core/global/launch_manager.tres") as LaunchManager
 
 var display_device := _power_manager.get_display_device()
+## Whether or not OpenGamepadUI is running in overlay mode.
+var overlay_mode := Platform.is_overlay_mode()
 var current_profile: PerformanceProfile
 var current_profile_state: PROFILE_STATE # docked or undocked
 var logger := Log.get_logger("PerformanceManager", Log.LEVEL.INFO)
@@ -181,24 +183,31 @@ func apply_profile(profile: PerformanceProfile) -> void:
 		if card.class != "integrated":
 			continue
 		logger.debug("Applying GPU performance settings from profile")
-		if card.power_profile != profile.gpu_power_profile:
-			logger.debug("Applying Power Profile: " + profile.gpu_power_profile)
-			card.power_profile = profile.gpu_power_profile
-		if card.manual_clock != profile.gpu_manual_enabled:
-			logger.debug("Applying Manual Clock Enabled: " + str(profile.gpu_manual_enabled))
-			card.manual_clock = profile.gpu_manual_enabled
-		if profile.gpu_freq_min_current > 0 and card.clock_value_mhz_min != profile.gpu_freq_min_current:
-			logger.debug("Applying Clock Freq Min: " + str(profile.gpu_freq_min_current))
-			card.clock_value_mhz_min = profile.gpu_freq_min_current
-		if profile.gpu_freq_max_current > 0 and card.clock_value_mhz_max != profile.gpu_freq_max_current:
-			logger.debug("Applying Clock Freq Max: " + str(profile.gpu_freq_max_current))
-			card.clock_value_mhz_max = profile.gpu_freq_max_current
+
+		# The GPU performance level and clock frequency are managed by the
+		# underlying session when in overlay mode.
+		if not overlay_mode:
+			if card.power_profile != profile.gpu_power_profile:
+				logger.debug("Applying Power Profile: " + profile.gpu_power_profile)
+				card.power_profile = profile.gpu_power_profile
+			if card.manual_clock != profile.gpu_manual_enabled:
+				logger.debug("Applying Manual Clock Enabled: " + str(profile.gpu_manual_enabled))
+				card.manual_clock = profile.gpu_manual_enabled
+			if profile.gpu_freq_min_current > 0 and card.clock_value_mhz_min != profile.gpu_freq_min_current:
+				logger.debug("Applying Clock Freq Min: " + str(profile.gpu_freq_min_current))
+				card.clock_value_mhz_min = profile.gpu_freq_min_current
+			if profile.gpu_freq_max_current > 0 and card.clock_value_mhz_max != profile.gpu_freq_max_current:
+				logger.debug("Applying Clock Freq Max: " + str(profile.gpu_freq_max_current))
+				card.clock_value_mhz_max = profile.gpu_freq_max_current
 		if profile.gpu_temp_current > 0 and card.thermal_throttle_limit_c != profile.gpu_temp_current:
 			logger.debug("Applying Thermal Throttle Limit: " + str(profile.gpu_temp_current))
 			card.thermal_throttle_limit_c = profile.gpu_temp_current
 
-		# Only apply GPU TDP settings from the given profile if we're in a mode that supports it
-		if profile.advanced_mode or "max-performance" in get_power_profiles_available():
+		# Only apply GPU TDP settings from the given profile if we're in a mode
+		# that supports it and TDP isn't managed by the underlying session
+		if overlay_mode:
+			logger.debug("Overlay mode detected. TDP and GPU clock frequency are managed by the session")
+		elif profile.advanced_mode or "max-performance" in get_power_profiles_available():
 			if profile.tdp_current > 0 and card.tdp != profile.tdp_current:
 				logger.debug("Applying TDP: " + str(profile.tdp_current))
 				card.tdp = profile.tdp_current
