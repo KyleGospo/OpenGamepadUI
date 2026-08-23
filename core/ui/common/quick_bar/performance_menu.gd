@@ -19,7 +19,7 @@ var _profiles_available: PackedStringArray
 @onready var smt_button := $SMTButton as Toggle
 @onready var cpu_label := $CPUSectionLabel as Control
 @onready var gpu_label := $GPUSectionLabel as Control
-@onready var wait_label := $WaitLabel as Control
+@onready var wait_label := $WaitLabel as Label
 @onready var service_timer := $ServiceTimer as Timer
 @onready var apply_timer := $ApplyTimer as Timer
 @onready var mangoapp_slider := $%MangoAppSlider as ValueSlider
@@ -38,6 +38,11 @@ var logger := Log.get_logger("Performance", Log.LEVEL.INFO)
 # Called when the node enters the scene tree for the first time.
 # Finds default values and current settings of the hardware.
 func _ready() -> void:
+	# In overlay mode the underlying session manages TDP itself, so PowerStation
+	# being absent is the expected state rather than something to wait for.
+	if _overlay_mode:
+		wait_label.text = "TDP managed by Steam"
+
 	# Setup dropdowns
 	var i := 0
 	_get_available_profiles()
